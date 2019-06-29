@@ -21,6 +21,7 @@ import org.elasticsearch.examples.nativescript.script.stockaggs.CombineScriptFac
 import org.elasticsearch.examples.nativescript.script.stockaggs.InitScriptFactory;
 import org.elasticsearch.examples.nativescript.script.stockaggs.MapScriptFactory;
 import org.elasticsearch.examples.nativescript.script.stockaggs.ReduceScriptFactory;
+import org.elasticsearch.examples.nativescript.script.CosineSimilarityScoreScript;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.ScriptPlugin;
 import org.elasticsearch.script.NativeScriptFactory;
@@ -56,7 +57,8 @@ public class NativeScriptExamplesPlugin extends Plugin implements ScriptPlugin {
             new InitScriptFactory(),
             new MapScriptFactory(),
             new CombineScriptFactory(),
-            new ReduceScriptFactory()
+            new ReduceScriptFactory(),
+            new CosineSimilarityScoreScript.Factory()
         );
     }
 }

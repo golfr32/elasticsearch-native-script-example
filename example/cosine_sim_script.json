@@ -1,0 +1,48 @@
+{
+  "script_fields": {
+    "i-tf": {
+      "script": "_index[\"text\"][\"i\"].tf()"
+    },
+    "am-tf": {
+      "script": "_index[\"text\"][\"am\"].tf()"
+    },
+    "sam-tf": {
+      "script": "_index[\"text\"][\"sam\"].tf()"
+    }
+  },
+  "query": {
+    "function_score": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "text": {
+                  "query": "sam i am",
+                  "operator": "and"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "functions": [{
+        "script_score": {
+          "script": {
+              "inline" : "cosine_sim_script_score",
+              "params": {
+                "field": "text",
+                "terms": [ "sam", "i", "am"  ],
+                "weights": [  1.0,  1.0,  1.0 ]
+              }
+          },
+          "lang": "native"
+        }
+      }
+      ],
+      "boost_mode": "replace"
+    }
+  }
+}
+
+
