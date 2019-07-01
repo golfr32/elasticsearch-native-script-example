@@ -50,7 +50,7 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
 
     final static public String SCRIPT_NAME = "cosine_sim_script_score";
 
-    private final static Logger logger = LogManager.getLogger(CosineSimilarityScoreScript.class);
+    private final static Logger LOGGER = LogManager.getLogger(CosineSimilarityScoreScript.class);
 
     /**
      * Factory that is registered in
@@ -98,10 +98,11 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
         params.entrySet();
         // get the terms
         terms = (ArrayList<String>) params.get("terms");
+
         weights = (ArrayList<Double>) params.get("weights");
         // get the field
         field = (String) params.get("field");
-        logger.info("calculating the similarity terms size:"+ terms.size()+" field:"+ field );
+        LOGGER.info("calculating the similarity terms size:"+ terms.size()+" field:"+ field );
         if (field == null || terms == null || weights == null) {
             throw new ScriptException(
                 "cannot initialize " + CosineSimilarityScoreScript.SCRIPT_NAME + ": field, terms or weights parameter missing!", null, Collections.emptyList(),
@@ -124,21 +125,25 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
             IndexField indexField = this.indexLookup().get(field);
             double queryWeightSum = 0.0f;
             double docWeightSum = 0.0f;
+            double scoreValue = 0.0f;
             for (int i = 0; i < terms.size(); i++) {
-                // Now, get the ShardTerm object that can be used to access all
-                // the term statistics
+                // 1.Now, get the ShardTerm object that can be used to access all
+                // 2.the term statistics
                 IndexFieldTerm indexTermField = indexField.get(terms.get(i));
                 // compute the most naive tfidf and add to current score
                 int df = (int) indexTermField.df();
                 int tf = indexTermField.tf();
-                if (df != 0 && tf != 0) {
+                if ( tf != 0 ) {
                     double termscore = (double) tf * weights.get(i);
                     score += termscore;
                     docWeightSum += Math.pow(tf, 2.0);
                 }
+                // 3.compute queryWeightSum
                 queryWeightSum += Math.pow(weights.get(i), 2.0);
             }
-            return score / (Math.sqrt(docWeightSum) * Math.sqrt(queryWeightSum));
+            scoreValue = (double)( score / ( Math.sqrt(docWeightSum) * Math.sqrt(queryWeightSum) ) ) ;
+            LOGGER.info("calculating the similarity value queryWeightSum:"+ queryWeightSum+" docWeightSum:"+ docWeightSum + " consine:"+ score );
+            return score;
         } catch (IOException ex) {
             throw new ScriptException(
                 "Could not compute cosine similarity: "+ex.getMessage(), null, Collections.emptyList(),
