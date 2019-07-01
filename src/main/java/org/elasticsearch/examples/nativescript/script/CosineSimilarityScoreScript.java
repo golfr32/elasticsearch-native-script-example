@@ -124,6 +124,7 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
             IndexField indexField = this.indexLookup().get(field);
             double queryWeightSum = 0.0f;
             double docWeightSum = 0.0f;
+            double scoreValue = 0.0f;
             for (int i = 0; i < terms.size(); i++) {
                 // Now, get the ShardTerm object that can be used to access all
                 // the term statistics
@@ -131,14 +132,20 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
                 // compute the most naive tfidf and add to current score
                 int df = (int) indexTermField.df();
                 int tf = indexTermField.tf();
-                if (df != 0 && tf != 0) {
+                logger.info("calculating the word pos:"+ i + " word:" + terms.get(i) + " tf:"+ tf + " df:"+ df +" weight:" + weights.get(i)  );
+                if ( tf != 0) {
                     double termscore = (double) tf * weights.get(i);
                     score += termscore;
                     docWeightSum += Math.pow(tf, 2.0);
+                    logger.info("calculating the word pos:"+ i +" score:"+ termscore + " docWeightSum:"+ docWeightSum  );
                 }
                 queryWeightSum += Math.pow(weights.get(i), 2.0);
+                logger.info("calculating the word score:"+ score + " queryWeightSum:"+ queryWeightSum  );
             }
-            return score / (Math.sqrt(docWeightSum) * Math.sqrt(queryWeightSum));
+
+            scoreValue = (double)(score / (Math.sqrt(docWeightSum) * Math.sqrt(queryWeightSum)));
+            logger.info("calculating the cosine similarity score:"+ score +" queryWeightSum:"+ queryWeightSum + " docWeightSum:"+ docWeightSum +" cosine:" + scoreValue);
+            return scoreValue;
         } catch (IOException ex) {
             throw new ScriptException(
                 "Could not compute cosine similarity: "+ex.getMessage(), null, Collections.emptyList(),
