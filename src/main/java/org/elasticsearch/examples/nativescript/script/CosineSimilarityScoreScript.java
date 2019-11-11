@@ -50,7 +50,7 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
 
     final static public String SCRIPT_NAME = "cosine_sim_script_score";
 
-    private final static Logger LOGGER = LogManager.getLogger(CosineSimilarityScoreScript.class);
+    private final static Logger logger = LogManager.getLogger(CosineSimilarityScoreScript.class);
 
     /**
      * Factory that is registered in
@@ -102,7 +102,7 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
         weights = (ArrayList<Double>) params.get("weights");
         // get the field
         field = (String) params.get("field");
-        LOGGER.info("calculating the similarity terms size:"+ terms.size()+" field:"+ field );
+        //logger.info("calculating the similarity terms size:"+ terms.size()+" field:"+ field );
         if (field == null || terms == null || weights == null) {
             throw new ScriptException(
                 "cannot initialize " + CosineSimilarityScoreScript.SCRIPT_NAME + ": field, terms or weights parameter missing!", null, Collections.emptyList(),
@@ -134,17 +134,17 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
                 int df = (int) indexTermField.df();
                 int tf = indexTermField.tf();
 
-                logger.info("calculating the word pos:"+ i + " word:" + terms.get(i) + " tf:"+ tf + " df:"+ df +" weight:" + weights.get(i)  );
+                //logger.info("calculating the word pos:"+ i + " word:" + terms.get(i) + " tf:"+ tf + " df:"+ df +" weight:" + weights.get(i)  );
                 if ( tf != 0) {
 
                     double termscore = (double) tf * weights.get(i);
                     score += termscore;
                     docWeightSum += Math.pow(tf, 2.0);
-                    logger.info("calculating the word pos:"+ i +" score:"+ termscore + " docWeightSum:"+ docWeightSum  );
+                    ///logger.info("calculating the word pos:"+ i +" score:"+ termscore + " docWeightSum:"+ docWeightSum  );
                 }
                 // 3.compute queryWeightSum
                 queryWeightSum += Math.pow(weights.get(i), 2.0);
-                logger.info("calculating the word score:"+ score + " queryWeightSum:"+ queryWeightSum  );
+                //logger.info("calculating the word score:"+ score + " queryWeightSum:"+ queryWeightSum  );
             }
             scoreValue = (double)(score / (Math.sqrt(docWeightSum) * Math.sqrt(queryWeightSum)));
             logger.info("calculating the cosine similarity score:"+ score +" queryWeightSum:"+ queryWeightSum + " docWeightSum:"+ docWeightSum +" cosine:" + scoreValue);

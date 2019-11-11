@@ -6,13 +6,20 @@ curl -s -XPUT "http://localhost:9200/termscore" -d'
 {
    "settings": {
       "number_of_shards": 1,
-      "number_of_replicas": 0
+      "number_of_replicas": 0,
+      "analysis": {
+          "analyzer": {
+            "whitespace":{
+              "type":"stardard"
+            }
+          }
+      }
    },
    "mappings": {
       "doc": {
          "properties": {
             "text": {
-               "type": "multi_field",
+               "type": "string",
                "fields": {
                   "text": {
                      "type": "string"
@@ -20,13 +27,49 @@ curl -s -XPUT "http://localhost:9200/termscore" -d'
                   "word_count": {
                      "type": "token_count",
                      "store": "yes",
-                     "analyzer": "standard"
+                     "analyzer": "whitespace"
                   }
                }
             }
          }
       }
    }
+}'
+
+curl -s -XPUT "http://localhost:9200/duplicate" -d'
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "whitespace":{
+          "type":"whitespace",
+          "filter": ["lowercase"]
+        }
+      }
+    }
+  },
+"mappings": {
+      "test": {
+        "properties": {
+          "content": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 10240
+              }
+            },
+            "analyzer": "whitespace"
+          },
+          "urlid": {
+            "type": "keyword"
+          },
+          "taskid": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
 }'
 
 curl -s -XPOST "http://localhost:9200/termscore/doc" -d'
@@ -96,9 +139,45 @@ curl -s -XPOST "http://localhost:9200/termscore/doc" -d'
    "text": "Would you like them Here or there? I would not like them here or there. I would not like them anywhere. I do not like green eggs and ham. I do not like them, Sam-I-am."
 }'
 
-curl -s -XPOST "http://localhost:9200/termscore/doc" -d'
+curl -s -XPUT "http://localhost:9200/duplicate" -d'
 {
-   "text": "Royal takes first Atlas first aircraft British Force -RRB"
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "whitespace":{
+          "type":"whitespace",
+          "filter": ["lowercase"]
+        }
+      }
+    }
+  },
+"mappings": {
+      "test": {
+        "properties": {
+          "content": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 10240
+              }
+            },
+            "analyzer": "whitespace"
+          },
+          "urlid": {
+            "type": "keyword"
+          },
+          "taskid": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+}'
+
+curl -s -XPOST "http://localhost:9200/duplicate/test" -d'
+{
+   "content": "Royal takes first Atlas first aircraft British Force -RRB","urlid":"4488774f15cc7382a2d5efa82c2006d1","taskid":"12"
 }'
 
 curl -s -XPOST "http://localhost:9200/termscore/doc" -d'
