@@ -17,11 +17,13 @@ package org.elasticsearch.examples.nativescript.plugin;
 import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.examples.nativescript.script.IsPrimeSearchScriptFactory;
+import org.elasticsearch.examples.nativescript.script.JaccardSimilarityScoreScript;
 import org.elasticsearch.examples.nativescript.script.stockaggs.CombineScriptFactory;
 import org.elasticsearch.examples.nativescript.script.stockaggs.InitScriptFactory;
 import org.elasticsearch.examples.nativescript.script.stockaggs.MapScriptFactory;
 import org.elasticsearch.examples.nativescript.script.stockaggs.ReduceScriptFactory;
 import org.elasticsearch.examples.nativescript.script.CosineSimilarityScoreScript;
+import org.elasticsearch.examples.nativescript.script.JaccardSimilarityScoreScript;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.plugins.ScriptPlugin;
 import org.elasticsearch.script.NativeScriptFactory;
@@ -58,7 +60,8 @@ public class NativeScriptExamplesPlugin extends Plugin implements ScriptPlugin {
             new MapScriptFactory(),
             new CombineScriptFactory(),
             new ReduceScriptFactory(),
-            new CosineSimilarityScoreScript.Factory()
+            new CosineSimilarityScoreScript.Factory(),
+            new JaccardSimilarityScoreScript.Factory()
         );
     }
 }

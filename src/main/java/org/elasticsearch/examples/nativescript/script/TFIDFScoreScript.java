@@ -100,6 +100,7 @@ public class TFIDFScoreScript extends AbstractSearchScript {
             float score = 0;
             // first, get the IndexField object for the field.
             IndexField indexField = indexLookup().get(field);
+
             for (int i = 0; i < terms.size(); i++) {
                 // Now, get the IndexFieldTerm object that can be used to access all
                 // the term statistics

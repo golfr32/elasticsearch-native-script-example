@@ -15,9 +15,8 @@
 package org.elasticsearch.examples.nativescript.script;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Collections;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -117,35 +116,75 @@ public class CosineSimilarityScoreScript extends AbstractSearchScript {
         }
     }
 
+    private Double getPositionFromTerms(String key){
+        if( !key.isEmpty() ) {
+            for (int i = 0; i < terms.size(); i++) {
+                if (terms.get(i).equals(key))
+                    return weights.get(i);
+            }
+        }
+        return 0.0;
+    }
+
     @Override
     public Object run() {
         try {
+            int k = 0;
             float score = 0;
             // first, get the ShardTerms object for the field.
             IndexField indexField = this.indexLookup().get(field);
             double queryWeightSum = 0.0f;
             double docWeightSum = 0.0f;
             double scoreValue = 0.0f;
-            for (int i = 0; i < terms.size(); i++) {
-                // 1.Now, get the ShardTerm object that can be used to access all
-                // 2.the term statistics
-                IndexFieldTerm indexTermField = indexField.get(terms.get(i));
-                // compute the most naive tfidf and add to current score
-                int df = (int) indexTermField.df();
-                int tf = indexTermField.tf();
-
-                //logger.info("calculating the word pos:"+ i + " word:" + terms.get(i) + " tf:"+ tf + " df:"+ df +" weight:" + weights.get(i)  );
-                if ( tf != 0) {
-
-                    double termscore = (double) tf * weights.get(i);
-                    score += termscore;
-                    docWeightSum += Math.pow(tf, 2.0);
-                    ///logger.info("calculating the word pos:"+ i +" score:"+ termscore + " docWeightSum:"+ docWeightSum  );
+            Map< String , Integer> allKeys = new HashMap<>( );
+            //1. 计算 Cosine 词
+            for (Map.Entry<String, IndexFieldTerm> entry : indexField.entrySet()) {
+                //IndexFieldTerm i = indexField.get(entry.getKey());
+                logger.info("calculating the cosine similarity Index keyword:"+ entry.getKey()  );
+                if(!allKeys.containsKey(entry.getKey())) {
+                    allKeys.put(entry.getKey(), k);
+                    k++;
                 }
-                // 3.compute queryWeightSum
-                queryWeightSum += Math.pow(weights.get(i), 2.0);
-                //logger.info("calculating the word score:"+ score + " queryWeightSum:"+ queryWeightSum  );
             }
+
+            for (int i = 0; i < terms.size(); i++) {
+                if(!allKeys.containsKey(terms.get(i))) {
+                    allKeys.put(terms.get(i), k);
+                    k++;
+                }
+                logger.info("calculating the cosine similarity terms keyword:"+ terms.get(i)  );
+            }
+
+            logger.info("calculating the cosine similarity terms length:"+ terms.size() +" Index length:"+ indexField.size() +" total length: " + allKeys.size() );
+
+            //2. 构造矩阵数组
+            double[] termsVector = new double[allKeys.size()];//query文档矩阵
+            double[] indexVector = new double[allKeys.size()];//被比较文档矩阵
+
+            //3.初始化矩阵
+            k = 0;
+            for (Map.Entry<String, Integer> entry : allKeys.entrySet()) {
+                //IndexFieldTerm i = indexField.get(entry.getKey());
+                int tf = 0;
+                IndexFieldTerm indexTermField = indexField.get( entry.getKey() );
+                if( indexTermField != null ){
+                     tf = indexTermField.tf();
+                }
+                indexVector[k] = tf;
+                termsVector[k] = getPositionFromTerms(entry.getKey());
+            }
+
+            logger.info("calculating the cosine similarity matrix done  total length: " + allKeys.size() );
+
+            //4.计算相似度值
+            for (int i = 0; i < allKeys.size(); i++) {
+                double termscore = (double) indexVector[i] * termsVector[i] ;
+                score += termscore;
+                docWeightSum += Math.pow(indexVector[i] , 2.0);
+                queryWeightSum += Math.pow(termsVector[i], 2.0);
+
+            }
+
             scoreValue = (double)(score / (Math.sqrt(docWeightSum) * Math.sqrt(queryWeightSum)));
             logger.info("calculating the cosine similarity score:"+ score +" queryWeightSum:"+ queryWeightSum + " docWeightSum:"+ docWeightSum +" cosine:" + scoreValue);
             return scoreValue;
